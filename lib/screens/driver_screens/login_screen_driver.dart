@@ -1,5 +1,4 @@
-import 'package:bus_tracking_app/main.dart';
-import 'package:bus_tracking_app/screens/main_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:bus_tracking_app/screens/driver_screens/navigation_screen_driver.dart';
 
@@ -15,6 +14,7 @@ class _LoginScreenState extends State<LoginScreenDriver> {
   final passwordTextEditingController = TextEditingController();
   final _formKey = GlobalKey<FormState>(); // Global key for the form
   bool _passwordVisible = false;
+  final FirebaseAuth firebaseAuth = FirebaseAuth.instance;
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +53,7 @@ class _LoginScreenState extends State<LoginScreenDriver> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  _buildIconCircle(Icons.person, "Passenger"),
+                  _buildIconCircle(Icons.person, "Driver"),
                 ],
               ),
               const SizedBox(height: 10),
@@ -138,14 +138,37 @@ class _LoginScreenState extends State<LoginScreenDriver> {
                                 borderRadius: BorderRadius.circular(30),
                               ),
                             ),
-                            onPressed: () {
+                            onPressed: () async {
                               // Validate form before proceeding
                               if (_formKey.currentState?.validate() ?? false) {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => NavigationScreen()),
-                                );
+                                try {
+                                  // Sign in the user with Firebase
+                                  UserCredential auth = await firebaseAuth
+                                      .signInWithEmailAndPassword(
+                                    email:
+                                        emailTextEditingController.text.trim(),
+                                    password: passwordTextEditingController.text
+                                        .trim(),
+                                  );
+
+                                  // If login is successful, navigate to the next screen
+                                  if (auth.user != null) {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) =>
+                                              NavigationScreen()),
+                                    );
+                                  }
+                                } catch (e) {
+                                  // Handle error during login
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                          "Login failed. Please check your credentials."),
+                                    ),
+                                  );
+                                }
                               } else {
                                 // Show an error if the form is invalid
                                 ScaffoldMessenger.of(context).showSnackBar(

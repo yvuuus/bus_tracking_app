@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "826481171173",
+    "firebase_url": "https://hafilaty-caf68-default-rtdb.firebaseio.com",
     "project_id": "hafilaty-caf68",
     "storage_bucket": "hafilaty-caf68.firebasestorage.app"
   },
@@ -36,9 +37,9 @@
     },
     {
       "client_info": {
-        "mobilesdk_app_id": "1:826481171173:android:2ff60595cb50ab86e0d20c",
+        "mobilesdk_app_id": "1:826481171173:android:1e87ffc0b613be07e0d20c",
         "android_client_info": {
-          "package_name": "driver.hafilaty"
+          "package_name": "com.example.bus_tracking_app"
         }
       },
       "oauth_client": [
@@ -49,7 +50,7 @@
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyBxQmekKFWt0-W_sTEocOyFsngcSHp8S5k"
+          "current_key": "AIzaSyDULR1PxZjlXxdnV4-Btx_ZF3WFf1ocsYw"
         }
       ],
       "services": {

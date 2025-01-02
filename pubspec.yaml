@@ -50,6 +50,9 @@ dependencies:
   smooth_star_rating_nsafe: ^1.0.0+1
   animated_text_kit: ^4.2.2
   provider: ^6.1.2
+  fluttertoast: ^8.0.9
+  flutter_riverpod: ^2.0.0
+
     # Firebase dependencies
   firebase_core: ^3.9.0
   firebase_auth: ^5.3.4

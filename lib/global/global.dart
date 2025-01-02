@@ -6,6 +6,5 @@ import 'package:geolocator/geolocator.dart';
 String userDropOffAddress = "";
 
 DirectionDetailsInfo? tripDirectionDetailsInfo;
-  StreamSubscription<Position>? streamSubscriptionPosition;
-  StreamSubscription<Position>? streamSubscriptionDriverLivePosition;
-
+StreamSubscription<Position>? streamSubscriptionPosition;
+StreamSubscription<Position>? streamSubscriptionDriverLivePosition;
