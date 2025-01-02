@@ -5,6 +5,16 @@ class DriverInfoModel {
   String carName;
   String carPlateNum;
   String carType;
+  String address;
 
-  DriverInfoModel(this.id,this.name,this.email, this.carName, this.carPlateNum, this.carType);
+  // Constructor with null safety
+  DriverInfoModel({
+    required this.id,
+    required this.name,
+    required this.email,
+    required this.carName,
+    required this.carPlateNum,
+    required this.carType,
+    required this.address,
+  });
 }
