@@ -27,16 +27,16 @@ class _LoginScreenState extends State<LoginScreenDriver> {
       },
       child: Scaffold(
         appBar: AppBar(
-          backgroundColor: Color(0xFFE1BEE7),
+          backgroundColor: const Color(0xFFE1BEE7),
           leading: IconButton(
-            icon: Icon(Icons.arrow_back),
+            icon: const Icon(Icons.arrow_back),
             onPressed: () {
               Navigator.pop(context);
             },
           ),
         ),
         body: Container(
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             gradient: LinearGradient(
               colors: [
                 Color(0xFFE1BEE7),
@@ -118,7 +118,7 @@ class _LoginScreenState extends State<LoginScreenDriver> {
                               onPressed: () {
                                 // Logic for password recovery
                               },
-                              child: Text(
+                              child: const Text(
                                 "Forgot Password?",
                                 style: TextStyle(
                                   color: Colors.white,
@@ -157,13 +157,13 @@ class _LoginScreenState extends State<LoginScreenDriver> {
                                       context,
                                       MaterialPageRoute(
                                           builder: (context) =>
-                                              NavigationScreen()),
+                                              const NavigationScreen()),
                                     );
                                   }
                                 } catch (e) {
                                   // Handle error during login
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
+                                    const SnackBar(
                                       content: Text(
                                           "Login failed. Please check your credentials."),
                                     ),
@@ -172,7 +172,7 @@ class _LoginScreenState extends State<LoginScreenDriver> {
                               } else {
                                 // Show an error if the form is invalid
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
+                                  const SnackBar(
                                     content: Text("Please fill all fields"),
                                   ),
                                 );

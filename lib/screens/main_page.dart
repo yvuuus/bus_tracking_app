@@ -1,23 +1,13 @@
 import 'dart:async';
 import 'package:bus_tracking_app/Assistants/assistants_methods.dart';
 import 'package:bus_tracking_app/global/global.dart';
-import 'package:bus_tracking_app/global/map_key.dart';
-import 'package:bus_tracking_app/infoHandler/app_info.dart';
-import 'package:bus_tracking_app/models/directions.dart';
-import 'package:bus_tracking_app/widgets/progress_dialog.dart';
-import 'package:cloud_firestore/cloud_firestore.dart'; // Firebase Firestore
-import 'package:firebase_auth/firebase_auth.dart'; // Firebase Auth
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_geofire/flutter_geofire.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:location/location.dart' as loc;
-import 'package:geocoder2/geocoder2.dart';
-import 'package:provider/provider.dart';
-import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-
 import 'package:flutter/services.dart';
 
 class MainScreen extends StatefulWidget {
@@ -46,7 +36,9 @@ class _MainScreenState extends State<MainScreen> {
   bool isDriverActive = false;
 
   Position? DriverCurrentPosition;
+  StreamSubscription<Position>? streamSubscriptionDriverLivePosition;
 
+  // Request location permissions
   checkIfLocationPermissionAllowed() async {
     _locationPermission = await Geolocator.requestPermission();
     if (_locationPermission == LocationPermission.denied) {
@@ -54,7 +46,7 @@ class _MainScreenState extends State<MainScreen> {
     }
   }
 
-  // Récupérer la position actuelle de l'utilisateur
+  // Get current location of the driver
   Future<void> _getDriverLocation() async {
     DriverCurrentPosition = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high);
@@ -66,19 +58,20 @@ class _MainScreenState extends State<MainScreen> {
     newGoogleMapController!
         .animateCamera(CameraUpdate.newCameraPosition(cameraPosition));
 
+    // Get human-readable address (optional)
     String humanReadableAddress =
         await AssistantsMethods.searchAddressForGeographicCordinates(
             DriverCurrentPosition!, context);
   }
 
+  // Read current driver information from Firebase
   readCurrentDriverInformation() async {
     User? currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) {
       print("No current user found.");
-      return; // Handle no user logged in
+      return;
     }
 
-    // Reading driver data from Firebase Realtime Database
     FirebaseDatabase.instance
         .ref()
         .child("drivers")
@@ -86,7 +79,6 @@ class _MainScreenState extends State<MainScreen> {
         .once()
         .then((snap) {
       if (snap.snapshot.value != null) {
-        // Assuming onlineDriverData is a class where you store the driver info
         Map<dynamic, dynamic> driverData =
             snap.snapshot.value as Map<dynamic, dynamic>;
 
@@ -109,9 +101,9 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     checkIfLocationPermissionAllowed();
+    readCurrentDriverInformation();
   }
 
   @override
@@ -119,7 +111,7 @@ class _MainScreenState extends State<MainScreen> {
     return Stack(
       children: [
         GoogleMap(
-          padding: EdgeInsets.only(top: 40),
+          padding: const EdgeInsets.only(top: 40),
           mapType: MapType.normal,
           myLocationEnabled: true,
           zoomGesturesEnabled: true,
@@ -131,8 +123,7 @@ class _MainScreenState extends State<MainScreen> {
             _getDriverLocation();
           },
         ),
-
-        //ui for online n offline driver
+        // UI for online/offline driver status
         statusText != "Now Online"
             ? Container(
                 height: MediaQuery.of(context).size.height,
@@ -140,7 +131,7 @@ class _MainScreenState extends State<MainScreen> {
                 color: Colors.black87,
               )
             : Container(),
-        //button for online offline driver
+        // Button for toggling online/offline driver status
         Positioned(
           top: statusText != "Now Online"
               ? MediaQuery.of(context).size.height * 0.45
@@ -173,20 +164,20 @@ class _MainScreenState extends State<MainScreen> {
                   },
                   style: ElevatedButton.styleFrom(
                       backgroundColor: buttonColor,
-                      padding: EdgeInsets.symmetric(horizontal: 18),
+                      padding: const EdgeInsets.symmetric(horizontal: 18),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(26),
                       )),
                   child: statusText != "Now Online"
                       ? Text(
                           statusText,
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),
                         )
-                      : Icon(
+                      : const Icon(
                           Icons.phonelink_ring,
                           color: Colors.white,
                           size: 26,
@@ -198,7 +189,14 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 
+  // Set driver as online and start updating location in real-time
   DriverisOnlineNow() async {
+    User? currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) {
+      print("No current user found.");
+      return;
+    }
+
     Position position = await Geolocator.getCurrentPosition(
       desiredAccuracy: LocationAccuracy.high,
     );
@@ -206,14 +204,14 @@ class _MainScreenState extends State<MainScreen> {
 
     // Initialize Geofire and set the driver's location
     Geofire.initialize("activeDrivers");
-    Geofire.setLocation(currentUser!.uid, DriverCurrentPosition!.latitude,
+    Geofire.setLocation(currentUser.uid, DriverCurrentPosition!.latitude,
         DriverCurrentPosition!.longitude);
 
     // Update the driver's status to "online" in Firebase
     DatabaseReference ref = FirebaseDatabase.instance
         .ref()
         .child("drivers")
-        .child(currentUser!.uid)
+        .child(currentUser.uid)
         .child("status");
 
     ref.set("online").then((_) {
@@ -222,11 +220,11 @@ class _MainScreenState extends State<MainScreen> {
       print("Error updating status: $error");
     });
 
-    // Set the new ride status (this can be customized based on your needs)
+    // Set the new ride status
     DatabaseReference rideStatusRef = FirebaseDatabase.instance
         .ref()
         .child("drivers")
-        .child(currentUser!.uid)
+        .child(currentUser.uid)
         .child("newRideStatus");
 
     rideStatusRef.set("idle").then((_) {
@@ -234,32 +232,109 @@ class _MainScreenState extends State<MainScreen> {
     }).catchError((error) {
       print("Error setting ride status: $error");
     });
-  }
 
-  updateDriversLocationRealTime() {
-    streamSubscriptionDriverLivePosition =
-        Geolocator.getPositionStream().listen((Position position) {
-      if (isDriverActive == true) {
-        Geofire.setLocation(currentUser!.uid, DriverCurrentPosition!.latitude,
-            DriverCurrentPosition!.longitude);
-      }
-      LatLng latLng = LatLng(
-          DriverCurrentPosition!.latitude, DriverCurrentPosition!.longitude);
-      newGoogleMapController!.animateCamera(CameraUpdate.newLatLng(latLng));
+    // Set the initial location in Firebase
+    DatabaseReference locationRef = FirebaseDatabase.instance
+        .ref()
+        .child("drivers")
+        .child(currentUser.uid)
+        .child("location");
+
+    locationRef.set({
+      "latitude": DriverCurrentPosition!.latitude,
+      "longitude": DriverCurrentPosition!.longitude,
+      "timestamp": DateTime.now().toIso8601String(),
+    }).then((_) {
+      print("Initial driver location set in Firebase");
+    }).catchError((error) {
+      print("Error setting initial driver location: $error");
     });
   }
 
+  // Update driver's location in real-time
+  updateDriversLocationRealTime() {
+    User? currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) {
+      print("No current user found.");
+      return;
+    }
+
+    streamSubscriptionDriverLivePosition =
+        Geolocator.getPositionStream().listen((Position position) {
+      DriverCurrentPosition = position;
+      if (isDriverActive) {
+        Geofire.setLocation(
+            currentUser.uid, position.latitude, position.longitude);
+
+        // Update the driver's location in Firebase
+        DatabaseReference ref = FirebaseDatabase.instance
+            .ref()
+            .child("drivers")
+            .child(currentUser.uid)
+            .child("location");
+
+        ref.set({
+          "latitude": position.latitude,
+          "longitude": position.longitude,
+          "timestamp": DateTime.now().toIso8601String(),
+        }).then((_) {
+          print("Driver location updated");
+        }).catchError((error) {
+          print("Error updating location: $error");
+        });
+
+        LatLng latLng = LatLng(position.latitude, position.longitude);
+        newGoogleMapController!.animateCamera(CameraUpdate.newLatLng(latLng));
+      }
+    });
+  }
+
+  // Set driver as offline and stop updating location
   driverIsOfflineNow() {
-    Geofire.removeLocation(currentUser!.uid);
-    DatabaseReference? ref = FirebaseDatabase.instance
+    User? currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) {
+      print("No current user found.");
+      return;
+    }
+
+    // Remove the driver from Geofire
+    Geofire.removeLocation(currentUser.uid).then((_) {
+      print("Driver removed from Geofire");
+    }).catchError((error) {
+      print("Error removing driver from Geofire: $error");
+    });
+
+    // Update the driver's status to "offline" in Firebase
+    DatabaseReference ref = FirebaseDatabase.instance
         .ref()
         .child("drivers")
-        .child(currentUser!.uid)
-        .child("newRideStatus");
-    ref.onDisconnect();
-    ref.remove();
-    ref = null;
-    Future.delayed(Duration(milliseconds: 2000), () {
+        .child(currentUser.uid)
+        .child("status");
+
+    ref.set("offline").then((_) {
+      print("Driver status updated to offline");
+    }).catchError((error) {
+      print("Error updating status: $error");
+    });
+
+    // Remove the driver's location from Firebase
+    DatabaseReference locationRef = FirebaseDatabase.instance
+        .ref()
+        .child("drivers")
+        .child(currentUser.uid)
+        .child("location");
+
+    locationRef.remove().then((_) {
+      print("Driver location removed");
+    }).catchError((error) {
+      print("Error removing location: $error");
+    });
+
+    // Cancel the location stream subscription
+    streamSubscriptionDriverLivePosition?.cancel();
+
+    // Optional: Close the app after going offline
+    Future.delayed(const Duration(milliseconds: 2000), () {
       SystemChannels.platform.invokeMethod("SystemNavigator.pop");
     });
   }
