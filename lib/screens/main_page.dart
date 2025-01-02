@@ -37,8 +37,12 @@ class _MainScreenState extends State<MainScreen> {
 
   GoogleMapController? newGoogleMapController;
 
+  String statusText = 'Now offline';
+  Color buttonColor = Colors.grey;
+  bool isDriverActive = false;
+
   double bottomPaddingOfMap = 0;
-  Position? userCurrentPosition;
+  Position? DriverCurrentPosition;
   bool locationServiceEnabled = false;
   LocationPermission? locationPermission;
 
@@ -53,6 +57,7 @@ class _MainScreenState extends State<MainScreen> {
   void initState() {
     super.initState();
     _checkLocationPermissions();
+    //_startLocationUpdates();
   }
 
   // Vérifier si les permissions de localisation sont accordées
@@ -71,7 +76,7 @@ class _MainScreenState extends State<MainScreen> {
       // Demander à l'utilisateur d'activer la localisation
       _showLocationPermissionDialog();
     } else {
-      _getUserLocation();
+      _getDriverLocation();
     }
   }
 
@@ -159,16 +164,16 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   // Récupérer la position actuelle de l'utilisateur
-  Future<void> _getUserLocation() async {
+  Future<void> _getDriverLocation() async {
     Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high);
     setState(() {
-      userCurrentPosition = position;
+      DriverCurrentPosition = position;
       pickLocation = LatLng(position.latitude, position.longitude);
 
       // Ajouter le marqueur rouge statique à la position de l'utilisateur
       markerset.add(Marker(
-        markerId: MarkerId("userLocation"),
+        markerId: MarkerId("DriverLocation"),
         position: pickLocation!,
         icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
         infoWindow: InfoWindow(title: "You are here"),
@@ -199,12 +204,12 @@ class _MainScreenState extends State<MainScreen> {
 
   // Fonction pour récupérer l'adresse en fonction des coordonnées lat/long
   Future<void> getAddressFromLatlng() async {
-    if (userCurrentPosition != null) {
+    if (DriverCurrentPosition != null) {
       try {
         // Utilisation de l'API géocode de Google pour obtenir l'adresse la plus complète
         String humanReadableAddress =
             await AssistantsMethods.searchAddressForGeographicCordinates(
-                userCurrentPosition!,
+                DriverCurrentPosition!,
                 context); // Utiliser userCurrentPosition ici
 
         setState(() {
@@ -249,6 +254,36 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 
+  void updateDriverLocationAtRealTime() {
+    // Listen for changes in the user's location
+    streamSubscriptionDriverLivePosition =
+        Geolocator.getPositionStream().listen((Position position) {
+      // Update driver's current position
+      DriverCurrentPosition = position;
+
+      // Update markers on the map
+      markerset.clear();
+      markerset.add(Marker(
+        markerId: MarkerId("DriverLocation"),
+        position: LatLng(position.latitude, position.longitude),
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+        infoWindow: InfoWindow(title: "You are here"),
+      ));
+
+      // Move the camera to the new position with a smooth animation
+      newGoogleMapController!.animateCamera(
+        CameraUpdate.newCameraPosition(
+          CameraPosition(
+              target: LatLng(position.latitude, position.longitude),
+              zoom: 14.0),
+        ),
+      );
+
+      // Update the address if needed
+      getAddressFromLatlng();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -267,7 +302,7 @@ class _MainScreenState extends State<MainScreen> {
           GoogleMap(
             mapType: MapType.normal,
             initialCameraPosition: _kGooglePlex,
-            myLocationEnabled: false, // Désactive le marqueur par défaut
+            myLocationEnabled: true, // Désactive le marqueur par défaut
             zoomGesturesEnabled: true,
             zoomControlsEnabled: true,
             markers: markerset,
@@ -282,7 +317,7 @@ class _MainScreenState extends State<MainScreen> {
               setState(() {
                 bottomPaddingOfMap = 200;
               });
-              _getUserLocation();
+              _getDriverLocation();
             },
 
             onCameraMove: (CameraPosition? position) {
@@ -298,7 +333,7 @@ class _MainScreenState extends State<MainScreen> {
             },
           ),
           // Afficher un indicateur de position lorsque la position est en cours de récupération
-          if (userCurrentPosition == null)
+          if (DriverCurrentPosition == null)
             Center(
               child: CircularProgressIndicator(),
             ),

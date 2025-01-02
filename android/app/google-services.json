@@ -1,0 +1,68 @@
+{
+  "project_info": {
+    "project_number": "826481171173",
+    "project_id": "hafilaty-caf68",
+    "storage_bucket": "hafilaty-caf68.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:826481171173:android:4c3385f6d9d95e28e0d20c",
+        "android_client_info": {
+          "package_name": "com.egoncastlr.bus_tracking_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "826481171173-va80lolmtflpu0akcmn545tq0qpakpln.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDULR1PxZjlXxdnV4-Btx_ZF3WFf1ocsYw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "826481171173-va80lolmtflpu0akcmn545tq0qpakpln.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:826481171173:android:2ff60595cb50ab86e0d20c",
+        "android_client_info": {
+          "package_name": "driver.hafilaty"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "826481171173-va80lolmtflpu0akcmn545tq0qpakpln.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBxQmekKFWt0-W_sTEocOyFsngcSHp8S5k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "826481171173-va80lolmtflpu0akcmn545tq0qpakpln.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
