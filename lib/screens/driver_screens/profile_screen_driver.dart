@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_database/firebase_database.dart';
 
 class ProfileScreenDriver extends StatefulWidget {
   const ProfileScreenDriver({super.key});
@@ -10,14 +12,37 @@ class ProfileScreenDriver extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreenDriver> {
   String? email;
   String driverName = "Driver Name";
+  String carName = "Vehicle Name";
+  String carPlateNum = "Plate Number";
+  String carType = "Car Type";
+
+  final DatabaseReference _databaseRef =
+      FirebaseDatabase.instance.ref("drivers/driverId1");
 
   @override
   void initState() {
     super.initState();
-    // Instead of fetching from Firebase, set a static email or load it from local storage
-    setState(() {
-      email = "driver.email@example.com"; // You can set a default value here or use a local storage solution
-    });
+    _fetchDriverData();
+  }
+
+  void _fetchDriverData() async {
+    final snapshot = await _databaseRef.get();
+    if (snapshot.exists) {
+      final data = snapshot.value as Map<dynamic, dynamic>;
+      setState(() {
+        driverName = data['name'];
+        email = data['email'];
+        carName = data['carName'];
+        carPlateNum = data['carPlateNum'];
+        carType = data['carType'];
+      });
+    } else {
+      debugPrint("Driver data not found.");
+    }
+  }
+
+  void _updateDriverData(String field, String value) async {
+    await _databaseRef.update({field: value});
   }
 
   void _editName() {
@@ -47,6 +72,7 @@ class _ProfileScreenState extends State<ProfileScreenDriver> {
                 setState(() {
                   driverName = nameController.text.trim();
                 });
+                _updateDriverData("name", driverName);
                 Navigator.pop(context);
               },
               style: ElevatedButton.styleFrom(backgroundColor: Colors.purple),
@@ -123,16 +149,16 @@ class _ProfileScreenState extends State<ProfileScreenDriver> {
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
                   children: [
                     ProfileDetailCard(
-                      title: "Driver ID",
-                      value: "12345",
-                    ),
-                    ProfileDetailCard(
                       title: "Vehicle",
-                      value: "ABC-1234",
+                      value: carName,
                     ),
                     ProfileDetailCard(
-                      title: "Assigned Route",
-                      value: "Route A - City Center",
+                      title: "Plate Number",
+                      value: carPlateNum,
+                    ),
+                    ProfileDetailCard(
+                      title: "Car Type",
+                      value: carType,
                     ),
                   ],
                 ),
@@ -146,7 +172,8 @@ class _ProfileScreenState extends State<ProfileScreenDriver> {
                     ElevatedButton(
                       onPressed: () {
                         // Perform any necessary local logout action, such as clearing local storage
-                        Navigator.pushReplacementNamed(context, '/login'); // Navigate to the login screen
+                        Navigator.pushReplacementNamed(
+                            context, '/login'); // Navigate to the login screen
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.purple,
