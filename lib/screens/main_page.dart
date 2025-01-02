@@ -42,14 +42,14 @@ class _MainScreenState extends State<MainScreen> {
   bool isDriverActive = false;
 
   double bottomPaddingOfMap = 0;
-  Position? DriverCurrentPosition;
+  Position? driverCurrentPosition;
   bool locationServiceEnabled = false;
   LocationPermission? locationPermission;
 
-  Set<Marker> markerset = {};
-  Set<Circle> circleset = {};
+  Set<Marker> markerSet = {};
+  Set<Circle> circleSet = {};
   Set<Polyline> polyLineSet = {};
-  List<LatLng> pLineCoordinatedList = [];
+  List<LatLng> pLineCoordinatesList = [];
 
   String? _address = "";
 
@@ -59,7 +59,6 @@ class _MainScreenState extends State<MainScreen> {
   void initState() {
     super.initState();
     _checkLocationPermissions();
-    //_startLocationUpdates();
   }
 
   Future<void> _checkLocationPermissions() async {
@@ -81,86 +80,140 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   Future<void> _getDriverLocation() async {
-    Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high);
-    setState(() {
-      DriverCurrentPosition = position;
-      pickLocation = LatLng(position.latitude, position.longitude);
+    try {
+      Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high);
+      setState(() {
+        driverCurrentPosition = position;
+        pickLocation = LatLng(position.latitude, position.longitude);
 
-      markerset.add(Marker(
-        markerId: MarkerId("DriverLocation"),
-        position: pickLocation!,
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
-        infoWindow: InfoWindow(title: "You are here"),
-      ));
-    });
+        markerSet.add(Marker(
+          markerId: const MarkerId("DriverLocation"),
+          position: pickLocation!,
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+          infoWindow: const InfoWindow(title: "You are here"),
+        ));
+      });
 
-    GoogleMapController controller = await _controllerGoogleMap.future;
-    controller.animateCamera(CameraUpdate.newCameraPosition(CameraPosition(
-      target: LatLng(position.latitude, position.longitude),
-      zoom: 14.0,
-    )));
+      GoogleMapController controller = await _controllerGoogleMap.future;
+      controller.animateCamera(CameraUpdate.newCameraPosition(CameraPosition(
+        target: LatLng(position.latitude, position.longitude),
+        zoom: 14.0,
+      )));
 
-    String humanReadableAddress =
-        await AssistantsMethods.searchAddressForGeographicCordinates(
-            position, context);
-    setState(() {
-      _address = humanReadableAddress;
-    });
+      String humanReadableAddress =
+          await AssistantsMethods.searchAddressForGeographicCordinates(
+              position, context);
+      setState(() {
+        _address = humanReadableAddress;
+      });
+    } catch (e) {
+      print("Error getting driver location: $e");
+    }
   }
 
-  Future<void> updateDriverStatus(bool isOnline, Position position) async {
-    String userId = FirebaseAuth.instance.currentUser?.uid ?? '';
-    if (userId.isNotEmpty) {
-      final driverData = {
-        'isOnline': isOnline,
-        'location': GeoPoint(position.latitude, position.longitude),
-      };
-      FirebaseFirestore.instance
+  Future<void> updateDriverStatus(bool isOnline, Position? position) async {
+    if (position == null) {
+      print("Position is null; cannot update driver status.");
+      return;
+    }
+
+    String userId = FirebaseAuth.instance.currentUser?.uid ?? 'test_driver_id';
+    if (userId.isEmpty) {
+      print("User ID is empty; cannot update driver status.");
+      return;
+    }
+
+    final driverData = {
+      'isOnline': isOnline,
+      'location': GeoPoint(position.latitude, position.longitude),
+      'timestamp': FieldValue.serverTimestamp(), // Useful for tracking
+    };
+
+    try {
+      await FirebaseFirestore.instance
           .collection('drivers')
           .doc(userId)
           .set(driverData, SetOptions(merge: true));
+      print("Driver status updated successfully.");
+    } catch (e) {
+      print("Error updating driver status: $e");
+    }
+  }
+
+  Future<void> initializeDriverLocation() async {
+    try {
+      Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high);
+      setState(() {
+        driverCurrentPosition = position;
+        pickLocation = LatLng(position.latitude, position.longitude);
+      });
+
+      // Update Firestore with initial status
+      await updateDriverStatus(true, position);
+    } catch (e) {
+      print("Error initializing driver location: $e");
     }
   }
 
   void updateDriverLocationAtRealTime() {
-    if (isDriverActive) {
-      streamSubscriptionDriverLivePosition =
-          Geolocator.getPositionStream().listen((Position position) {
-        DriverCurrentPosition = position;
-        markerset.clear();
-        markerset.add(Marker(
-          markerId: MarkerId("DriverLocation"),
-          position: LatLng(position.latitude, position.longitude),
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
-          infoWindow: InfoWindow(title: "You are here"),
-        ));
+    if (!isDriverActive) return;
 
-        newGoogleMapController!.animateCamera(
-          CameraUpdate.newCameraPosition(
-            CameraPosition(
-                target: LatLng(position.latitude, position.longitude),
-                zoom: 14.0),
-          ),
-        );
-
-        getAddressFromLatlng();
-        updateDriverStatus(true, position);
+    streamSubscriptionDriverLivePosition =
+        Geolocator.getPositionStream().listen((Position position) {
+      setState(() {
+        driverCurrentPosition = position;
       });
+
+      markerSet.clear();
+      markerSet.add(Marker(
+        markerId: const MarkerId("DriverLocation"),
+        position: LatLng(position.latitude, position.longitude),
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+        infoWindow: const InfoWindow(title: "You are here"),
+      ));
+
+      newGoogleMapController?.animateCamera(
+        CameraUpdate.newCameraPosition(
+          CameraPosition(
+            target: LatLng(position.latitude, position.longitude),
+            zoom: 14.0,
+          ),
+        ),
+      );
+
+      // Update Firestore in real-time
+      updateDriverStatus(true, position);
+    });
+  }
+
+  void toggleDriverStatus() {
+    if (!isDriverActive) {
+      setState(() {
+        isDriverActive = true;
+      });
+      initializeDriverLocation();
+      updateDriverLocationAtRealTime();
+    } else {
+      setState(() {
+        isDriverActive = false;
+      });
+      stopDriverLocationUpdates();
     }
   }
 
   void stopDriverLocationUpdates() {
     streamSubscriptionDriverLivePosition.cancel();
-    updateDriverStatus(false, DriverCurrentPosition!);
+    updateDriverStatus(false, driverCurrentPosition);
   }
 
-  Future<void> getAddressFromLatlng() async {
-    if (DriverCurrentPosition != null) {
+  Future<void> getAddressFromLatLng() async {
+    if (driverCurrentPosition != null) {
       try {
         String humanReadableAddress =
             await AssistantsMethods.searchAddressForGeographicCordinates(
-                DriverCurrentPosition!, context);
+                driverCurrentPosition!, context);
         setState(() {
           _address = humanReadableAddress;
         });
@@ -175,12 +228,12 @@ class _MainScreenState extends State<MainScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Permission de localisation nécessaire'),
-          content: Text(
+          title: const Text('Permission de localisation nécessaire'),
+          content: const Text(
               'Veuillez activer la localisation dans les paramètres de votre appareil pour utiliser cette fonctionnalité.'),
           actions: <Widget>[
             TextButton(
-              child: Text('OK'),
+              child: const Text('OK'),
               onPressed: () {
                 Navigator.pop(context);
               },
@@ -195,10 +248,10 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color(0xFFE1BEE7),
-        title: Text('Map Screen'),
+        backgroundColor: const Color(0xFFE1BEE7),
+        title: const Text('Map Screen'),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back),
           onPressed: () {
             Navigator.pop(context);
           },
@@ -212,8 +265,8 @@ class _MainScreenState extends State<MainScreen> {
             myLocationEnabled: true,
             zoomGesturesEnabled: true,
             zoomControlsEnabled: true,
-            markers: markerset,
-            circles: circleset,
+            markers: markerSet,
+            circles: circleSet,
             polylines: polyLineSet,
             padding: EdgeInsets.only(bottom: bottomPaddingOfMap),
             onMapCreated: (GoogleMapController controller) {
@@ -226,20 +279,20 @@ class _MainScreenState extends State<MainScreen> {
               _getDriverLocation();
             },
             onCameraMove: (CameraPosition? position) {
-              if (pickLocation != position!.target) {
+              if (pickLocation != position?.target) {
                 setState(() {
-                  pickLocation = position.target;
+                  pickLocation = position?.target;
                 });
               }
             },
             onCameraIdle: () {
-              getAddressFromLatlng();
+              getAddressFromLatLng();
             },
             onTap: (_) {
               if (!isDriverActive) {
                 setState(() {
                   isDriverActive = true;
-                  updateDriverStatus(true, DriverCurrentPosition!);
+                  updateDriverStatus(true, driverCurrentPosition);
                   updateDriverLocationAtRealTime(); // Start location updates
                 });
               } else {
@@ -251,7 +304,7 @@ class _MainScreenState extends State<MainScreen> {
             },
           ),
           if (!isDriverActive)
-            Center(
+            const Center(
               child: CircularProgressIndicator(),
             ),
         ],
