@@ -1,11 +1,11 @@
 class DriverInfoModel {
-  String id;
-  String name;
-  String email;
-  String carName;
-  String carPlateNum;
-  String carType;
-  String address;
+  String? id;
+  String? name;
+  String? email;
+  String? carName;
+  String? carPlateNum;
+  String? carType;
+  String? address;
 
   // Constructor with null safety
   DriverInfoModel({

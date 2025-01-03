@@ -233,7 +233,7 @@ class _MainScreenState extends State<MainScreen> {
       print("Error setting ride status: $error");
     });
 
-    // Set the initial location in Firebase
+    // Set the initial location in Firebase (latitude, longitude, timestamp)
     DatabaseReference locationRef = FirebaseDatabase.instance
         .ref()
         .child("drivers")
@@ -315,27 +315,6 @@ class _MainScreenState extends State<MainScreen> {
       print("Driver status updated to offline");
     }).catchError((error) {
       print("Error updating status: $error");
-    });
-
-    // Remove the driver's location from Firebase
-    DatabaseReference locationRef = FirebaseDatabase.instance
-        .ref()
-        .child("drivers")
-        .child(currentUser.uid)
-        .child("location");
-
-    locationRef.remove().then((_) {
-      print("Driver location removed");
-    }).catchError((error) {
-      print("Error removing location: $error");
-    });
-
-    // Cancel the location stream subscription
-    streamSubscriptionDriverLivePosition?.cancel();
-
-    // Optional: Close the app after going offline
-    Future.delayed(const Duration(milliseconds: 2000), () {
-      SystemChannels.platform.invokeMethod("SystemNavigator.pop");
     });
   }
 }
