@@ -39,7 +39,7 @@ class _MainScreenState extends State<MainScreen> {
   StreamSubscription<Position>? streamSubscriptionDriverLivePosition;
 
   // Request location permissions
-  checkIfLocationPermissionAllowed() async {
+  Future<void> checkIfLocationPermissionAllowed() async {
     _locationPermission = await Geolocator.requestPermission();
     if (_locationPermission == LocationPermission.denied) {
       _locationPermission = await Geolocator.requestPermission();
@@ -65,22 +65,23 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   // Read current driver information from Firebase
-  readCurrentDriverInformation() async {
+  Future<void> readCurrentDriverInformation() async {
     User? currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) {
       print("No current user found.");
       return;
     }
 
-    FirebaseDatabase.instance
-        .ref()
-        .child("drivers")
-        .child(currentUser.uid)
-        .once()
-        .then((snap) {
-      if (snap.snapshot.value != null) {
+    try {
+      DatabaseEvent event = await FirebaseDatabase.instance
+          .ref()
+          .child("drivers")
+          .child(currentUser.uid)
+          .once();
+
+      if (event.snapshot.value != null) {
         Map<dynamic, dynamic> driverData =
-            snap.snapshot.value as Map<dynamic, dynamic>;
+            event.snapshot.value as Map<dynamic, dynamic>;
 
         setState(() {
           onlineDriverData.name = driverData["name"];
@@ -94,9 +95,9 @@ class _MainScreenState extends State<MainScreen> {
       } else {
         print("Driver data not found.");
       }
-    }).catchError((e) {
+    } catch (e) {
       print("Error reading driver data: $e");
-    });
+    }
   }
 
   @override
@@ -190,69 +191,69 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   // Set driver as online and start updating location in real-time
-  DriverisOnlineNow() async {
+  Future<void> DriverisOnlineNow() async {
     User? currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) {
       print("No current user found.");
       return;
     }
 
-    Position position = await Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.high,
-    );
-    DriverCurrentPosition = position;
+    try {
+      print("Getting current position...");
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+      DriverCurrentPosition = position;
 
-    // Initialize Geofire and set the driver's location
-    Geofire.initialize("activeDrivers");
-    Geofire.setLocation(currentUser.uid, DriverCurrentPosition!.latitude,
-        DriverCurrentPosition!.longitude);
+      // Initialize Geofire and set the driver's location
+      print("Initializing Geofire...");
+      Geofire.initialize("activeDrivers");
+      print("Geofire initialized");
 
-    // Update the driver's status to "online" in Firebase
-    DatabaseReference ref = FirebaseDatabase.instance
-        .ref()
-        .child("drivers")
-        .child(currentUser.uid)
-        .child("status");
+      await Geofire.setLocation(currentUser.uid,
+          DriverCurrentPosition!.latitude, DriverCurrentPosition!.longitude);
+      print("Driver location set in Geofire");
 
-    ref.set("online").then((_) {
+      // Update the driver's status to "online" in Firebase
+      DatabaseReference ref = FirebaseDatabase.instance
+          .ref()
+          .child("drivers")
+          .child(currentUser.uid)
+          .child("status");
+
+      await ref.set("online");
       print("Driver status updated to online");
-    }).catchError((error) {
-      print("Error updating status: $error");
-    });
 
-    // Set the new ride status
-    DatabaseReference rideStatusRef = FirebaseDatabase.instance
-        .ref()
-        .child("drivers")
-        .child(currentUser.uid)
-        .child("newRideStatus");
+      // Set the new ride status
+      DatabaseReference rideStatusRef = FirebaseDatabase.instance
+          .ref()
+          .child("drivers")
+          .child(currentUser.uid)
+          .child("newRideStatus");
 
-    rideStatusRef.set("idle").then((_) {
+      await rideStatusRef.set("idle");
       print("Ride status set to idle");
-    }).catchError((error) {
-      print("Error setting ride status: $error");
-    });
 
-    // Set the initial location in Firebase (latitude, longitude, timestamp)
-    DatabaseReference locationRef = FirebaseDatabase.instance
-        .ref()
-        .child("drivers")
-        .child(currentUser.uid)
-        .child("location");
+      // Set the initial location in Firebase (latitude, longitude, timestamp)
+      DatabaseReference locationRef = FirebaseDatabase.instance
+          .ref()
+          .child("drivers")
+          .child(currentUser.uid)
+          .child("location");
 
-    locationRef.set({
-      "latitude": DriverCurrentPosition!.latitude,
-      "longitude": DriverCurrentPosition!.longitude,
-      "timestamp": DateTime.now().toIso8601String(),
-    }).then((_) {
+      await locationRef.set({
+        "latitude": DriverCurrentPosition!.latitude,
+        "longitude": DriverCurrentPosition!.longitude,
+        "timestamp": DateTime.now().toIso8601String(),
+      });
       print("Initial driver location set in Firebase");
-    }).catchError((error) {
-      print("Error setting initial driver location: $error");
-    });
+    } catch (error) {
+      print("Error: $error");
+    }
   }
 
   // Update driver's location in real-time
-  updateDriversLocationRealTime() {
+  void updateDriversLocationRealTime() {
     User? currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) {
       print("No current user found.");
@@ -263,6 +264,7 @@ class _MainScreenState extends State<MainScreen> {
         Geolocator.getPositionStream().listen((Position position) {
       DriverCurrentPosition = position;
       if (isDriverActive) {
+        print("Updating location in Geofire...");
         Geofire.setLocation(
             currentUser.uid, position.latitude, position.longitude);
 
@@ -290,31 +292,30 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   // Set driver as offline and stop updating location
-  driverIsOfflineNow() {
+  Future<void> driverIsOfflineNow() async {
     User? currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) {
       print("No current user found.");
       return;
     }
 
-    // Remove the driver from Geofire
-    Geofire.removeLocation(currentUser.uid).then((_) {
+    try {
+      // Remove the driver from Geofire
+      print("Removing driver from Geofire...");
+      await Geofire.removeLocation(currentUser.uid);
       print("Driver removed from Geofire");
-    }).catchError((error) {
-      print("Error removing driver from Geofire: $error");
-    });
 
-    // Update the driver's status to "offline" in Firebase
-    DatabaseReference ref = FirebaseDatabase.instance
-        .ref()
-        .child("drivers")
-        .child(currentUser.uid)
-        .child("status");
+      // Update the driver's status to "offline" in Firebase
+      DatabaseReference ref = FirebaseDatabase.instance
+          .ref()
+          .child("drivers")
+          .child(currentUser.uid)
+          .child("status");
 
-    ref.set("offline").then((_) {
+      await ref.set("offline");
       print("Driver status updated to offline");
-    }).catchError((error) {
-      print("Error updating status: $error");
-    });
+    } catch (error) {
+      print("Error: $error");
+    }
   }
 }
