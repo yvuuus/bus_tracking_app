@@ -8,7 +8,6 @@ import 'package:flutter_geofire/flutter_geofire.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:flutter/services.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -62,6 +61,7 @@ class _MainScreenState extends State<MainScreen> {
     String humanReadableAddress =
         await AssistantsMethods.searchAddressForGeographicCordinates(
             DriverCurrentPosition!, context);
+    print("Address found: $humanReadableAddress");
   }
 
   // Read current driver information from Firebase
@@ -87,11 +87,11 @@ class _MainScreenState extends State<MainScreen> {
           onlineDriverData.name = driverData["name"];
           onlineDriverData.id = driverData["id"];
           onlineDriverData.email = driverData["email"];
-          onlineDriverData.address = driverData["address"];
           onlineDriverData.carName = driverData["carName"];
           onlineDriverData.carPlateNum = driverData["carPlateNum"];
           onlineDriverData.carType = driverData["carType"];
         });
+        print("Driver data loaded: $driverData");
       } else {
         print("Driver data not found.");
       }

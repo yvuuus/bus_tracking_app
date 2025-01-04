@@ -1,6 +1,6 @@
 plugins {
     id 'com.android.application'
-    id 'com.google.gms.google-services'  // Apply Firebase plugin
+    id 'com.google.gms.google-services' // Apply Firebase plugin
     id 'kotlin-android'
     id 'dev.flutter.flutter-gradle-plugin'
 }
@@ -25,6 +25,7 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+         minSdkVersion 23 
     }
 
     buildTypes {
@@ -35,10 +36,10 @@ android {
 }
 
 dependencies {
-    implementation platform('com.google.firebase:firebase-bom:33.7.0')  // BOM for Firebase dependencies
-    implementation 'com.google.firebase:firebase-auth'  // Firebase Auth (if using)
-    implementation 'com.google.firebase:firebase-database'  // Firebase Realtime Database
-    implementation 'com.google.firebase:firebase-analytics'  // Firebase Analytics
+    implementation platform('com.google.firebase:firebase-bom:33.7.0') // BOM for Firebase dependencies
+    implementation 'com.google.firebase:firebase-auth' // Firebase Auth (if using)
+    implementation 'com.google.firebase:firebase-database' // Firebase Realtime Database
+    implementation 'com.google.firebase:firebase-analytics' // Firebase Analytics
     implementation 'androidx.core:core-ktx:1.10.1'
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.8.0'
@@ -48,9 +49,8 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
 }
 
-
 flutter {
     source = "../.."
 }
 
-apply plugin: 'com.google.gms.google-services'  // Apply the plugin here (ensure it's at the bottom)
+apply plugin: 'com.google.gms.google-services' // Apply the plugin here (ensure it's at the bottom)

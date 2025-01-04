@@ -1,6 +1,13 @@
-plugins {
-    id 'com.android.application' version '8.2.1' apply false
-    id 'com.google.gms.google-services' version '4.4.2' apply false // Correct plugin for Firebase
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.2.1' // Ensure this version matches the one in the app-level build.gradle
+        classpath 'com.google.gms:google-services:4.4.2' // Correct plugin for Firebase
+        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.0' // Kotlin gradle plugin
+    }
 }
 
 allprojects {
