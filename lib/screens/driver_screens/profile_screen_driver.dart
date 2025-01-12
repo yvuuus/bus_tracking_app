@@ -1,3 +1,4 @@
+import 'package:bus_tracking_app/screens/driver_screens/login_screen_driver.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -142,16 +143,22 @@ class _ProfileScreenDriverState extends State<ProfileScreenDriver> {
                           ),
                         ),
 
-                        // Logout Section
+// Logout Section
                         Padding(
                           padding: const EdgeInsets.all(16.0),
                           child: Column(
                             children: [
                               ElevatedButton(
-                                onPressed: () {
+                                onPressed: () async {
                                   // Perform any necessary local logout action, such as clearing local storage
-                                  Navigator.pushReplacementNamed(context,
-                                      '/login'); // Navigate to the login screen
+                                  await FirebaseAuth.instance
+                                      .signOut(); // Sign out from Firebase
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) =>
+                                            LoginScreenDriver()),
+                                  ); // Navigate to the login screen
                                 },
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.purple,

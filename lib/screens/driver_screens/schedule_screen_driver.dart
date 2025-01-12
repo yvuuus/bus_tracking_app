@@ -8,83 +8,186 @@ class ScheduleScreenDriver extends StatefulWidget {
 }
 
 class _ScheduleScreenState extends State<ScheduleScreenDriver> {
+  // Initialize the schedule with your provided data
   final List<Map<String, dynamic>> schedule = [
-    {"spot": "Draria", "timing": "8:00 - 10:00 - 14:20 - 16:00 - 18:20"},
-    {"spot": "Ben Aknoun", "timing": "8:30 - 10:10 - 14:10 - 16:30 - 18:30"},
-    {"spot": "Dely Brahim", "timing": "8:05 - 10:40 - 14:40 - 16:05 - 18:40"},
-    {"spot": "Didouch", "timing": "8:00 - 10:00 - 14:20 - 16:00 - 18:20"},
-    {"spot": "Alger centre", "timing": "8:00 - 10:00 - 14:20 - 16:00 - 18:20"},
-    {"spot": "Rahmania", "timing": "8:00 - 10:00 - 14:20 - 16:00 - 18:20"},
-    {"spot": "Sidi Abdallah", "timing": "8:00 - 10:00 - 14:20 - 16:00 - 18:20"},
+    {
+      "departure": "Oued Romane",
+      "destination": "Baba Hassen",
+      "timing": "08:00 - 08:30",
+      "done": false
+    },
+    {
+      "departure": "El Achour",
+      "destination": "Shaoula",
+      "timing": "09:00 - 09:40",
+      "done": false
+    },
+    {
+      "departure": "Sebala",
+      "destination": "Draria",
+      "timing": "10:00 - 10:40",
+      "done": false
+    },
+    {
+      "departure": "Baba Hassen",
+      "destination": "Oued Tarfa",
+      "timing": "11:00 - 11:45",
+      "done": false
+    },
+    {
+      "departure": "Shaoula",
+      "destination": "El Achour",
+      "timing": "12:00 - 12:30",
+      "done": false
+    },
+    {
+      "departure": "Draria",
+      "destination": "Sebala",
+      "timing": "13:00 - 13:35",
+      "done": false
+    },
+    {
+      "departure": "Oued Romane",
+      "destination": "El Achour",
+      "timing": "14:00 - 14:45",
+      "done": false
+    },
+    {
+      "departure": "Sebala",
+      "destination": "Oued Romane",
+      "timing": "15:00 - 15:40",
+      "done": false
+    },
+    {
+      "departure": "Baba Hassen",
+      "destination": "Draria",
+      "timing": "16:00 - 16:30",
+      "done": false
+    },
+    {
+      "departure": "Oued Tarfa",
+      "destination": "Shaoula",
+      "timing": "17:00 - 17:45",
+      "done": false
+    },
+    {
+      "departure": "Oued Romane",
+      "destination": "Baba Hassen",
+      "timing": "09:00 - 09:30",
+      "done": false
+    },
+    {
+      "departure": "El Achour",
+      "destination": "Shaoula",
+      "timing": "10:00 - 10:40",
+      "done": false
+    },
   ];
+
+  // Initial selected day
+  String selectedDay = "Sunday";
 
   @override
   Widget build(BuildContext context) {
+    // Get the size of the screen
     Size size = MediaQuery.sizeOf(context);
     return Scaffold(
+      // AppBar with title
       appBar: AppBar(
         title: const Text('Schedule'),
-        backgroundColor: Colors.purple.shade600,
+        backgroundColor: Colors.purple.shade600, // AppBar background color
       ),
       body: SafeArea(
         child: Container(
-          color: Colors.white,
+          color: const Color.fromARGB(
+              255, 255, 254, 255), // Background color of the main container
           width: size.width,
           height: size.height,
           child: Column(
             children: [
               const Padding(
-                padding: EdgeInsets.all(16.0),
+                padding: EdgeInsets.all(16.0), // Padding for spacing
               ),
-              Expanded(
-                child: ListView.separated(
-                  itemCount: schedule.length,
-                  separatorBuilder: (context, index) => Divider(
-                    color: Colors.grey.shade400,
-                    thickness: 1,
-                  ),
-                  itemBuilder: (context, index) {
-                    final spot = schedule[index];
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 10.0, horizontal: 16.0),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.purple.shade100,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        padding: const EdgeInsets.all(16.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  spot['spot'],
-                                  style: const TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black,
-                                  ),
-                                ),
-                                const SizedBox(height: 5),
-                                Text(
-                                  spot['timing'],
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    color: Colors.black,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
+              // DropdownButton to select the day of the week
+              DropdownButton<String>(
+                value: selectedDay,
+                dropdownColor: Colors
+                    .purple.shade100, // Background color of the dropdown menu
+                style: const TextStyle(
+                    color: Color.fromARGB(
+                        255, 0, 0, 0)), // Text style for dropdown items
+                items: [
+                  "Sunday",
+                  "Monday",
+                  "Tuesday",
+                  "Wednesday",
+                  "Thursday",
+                  "Friday",
+                  "Saturday"
+                ].map<DropdownMenuItem<String>>((String day) {
+                  return DropdownMenuItem<String>(
+                    value: day,
+                    child: Text(day),
+                  );
+                }).toList(),
+                onChanged: (String? newValue) {
+                  setState(() {
+                    selectedDay = newValue!;
+                  });
+                },
+              ),
+              // Display "Rest day" text for Friday and Saturday
+              if (selectedDay == "Friday" || selectedDay == "Saturday") ...[
+                const Text(
+                  'Rest day',
+                  style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold),
                 ),
-              ),
+              ] else ...[
+                // Expanded widget to hold the list of schedule items
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: schedule.length,
+                    itemBuilder: (context, index) {
+                      final spot = schedule[index];
+                      // Hide the done items
+                      if (spot['done']) {
+                        return SizedBox.shrink();
+                      }
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 10.0, horizontal: 16.0),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.purple
+                                .shade100, // Background color of the container
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: ListTile(
+                            // Display departure, destination, and timing
+                            title: Text(
+                              'Departure: ${spot['departure']}\nDestination: ${spot['destination']}\nTiming: ${spot['timing']}',
+                              style: const TextStyle(
+                                  color: Colors.black, fontSize: 16),
+                            ),
+                            // Checkbox to mark the item as done
+                            trailing: Checkbox(
+                              value: spot['done'],
+                              onChanged: (bool? value) {
+                                setState(() {
+                                  spot['done'] = value!;
+                                });
+                              },
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
             ],
           ),
         ),
