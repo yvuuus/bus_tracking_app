@@ -17,68 +17,68 @@ class _ScheduleScreenState extends State<ScheduleScreenDriver> {
       "done": false
     },
     {
-      "departure": "El Achour",
-      "destination": "Shaoula",
+      "departure": "Baba Hassen",
+      "destination": "Douera",
       "timing": "09:00 - 09:40",
       "done": false
     },
     {
-      "departure": "Sebala",
-      "destination": "Draria",
+      "departure": "Douera",
+      "destination": "Mahemla",
       "timing": "10:00 - 10:40",
       "done": false
     },
     {
-      "departure": "Baba Hassen",
-      "destination": "Oued Tarfa",
+      "departure": "Mahemla",
+      "destination": "Sidi Abdellah",
       "timing": "11:00 - 11:45",
       "done": false
     },
     {
-      "departure": "Shaoula",
-      "destination": "El Achour",
+      "departure": "Sidi Abdellah",
+      "destination": "Zeralda",
       "timing": "12:00 - 12:30",
       "done": false
     },
     {
-      "departure": "Draria",
-      "destination": "Sebala",
+      "departure": "Zralda",
+      "destination": "Staoueli",
       "timing": "13:00 - 13:35",
       "done": false
     },
     {
-      "departure": "Oued Romane",
-      "destination": "El Achour",
+      "departure": "Staoueli",
+      "destination": "Ain Benian",
       "timing": "14:00 - 14:45",
       "done": false
     },
     {
-      "departure": "Sebala",
-      "destination": "Oued Romane",
+      "departure": "Ain Benian",
+      "destination": "El Hammamet",
       "timing": "15:00 - 15:40",
       "done": false
     },
     {
-      "departure": "Baba Hassen",
-      "destination": "Draria",
+      "departure": "El Hammamet",
+      "destination": "Rais Hamidou",
       "timing": "16:00 - 16:30",
       "done": false
     },
     {
-      "departure": "Oued Tarfa",
-      "destination": "Shaoula",
+      "departure": "Rais Hamidou",
+      "destination": "Bouzereah",
       "timing": "17:00 - 17:45",
       "done": false
     },
     {
-      "departure": "Oued Romane",
-      "destination": "Baba Hassen",
+      "departure": "Bouzereah",
+      "destination": "Ben Aknoun",
       "timing": "09:00 - 09:30",
       "done": false
     },
     {
-      "departure": "El Achour",
-      "destination": "Shaoula",
+      "departure": "Ben Aknoun",
+      "destination": "Baba Hassen",
       "timing": "10:00 - 10:40",
       "done": false
     },
@@ -138,12 +138,16 @@ class _ScheduleScreenState extends State<ScheduleScreenDriver> {
               ),
               // Display "Rest day" text for Friday and Saturday
               if (selectedDay == "Friday" || selectedDay == "Saturday") ...[
-                const Text(
-                  'Rest day',
-                  style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold),
+                Expanded(
+                  child: Center(
+                    child: const Text(
+                      'Rest day',
+                      style: TextStyle(
+                          color: Colors.black,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold),
+                    ),
+                  ),
                 ),
               ] else ...[
                 // Expanded widget to hold the list of schedule items
