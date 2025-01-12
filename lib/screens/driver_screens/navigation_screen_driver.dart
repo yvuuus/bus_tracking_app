@@ -33,34 +33,43 @@ class _NavigationScreenState extends State<NavigationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: screens[_selectedIndex],  // Display the selected screen
-      bottomNavigationBar: NavigationBar(
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.home_outlined, color: Colors.white),
-            label: "",
-            selectedIcon: Icon(Icons.home, color: Colors.white),
+      body: screens[_selectedIndex], // Display the selected screen
+      bottomNavigationBar: Theme(
+        data: Theme.of(context).copyWith(
+          navigationBarTheme: NavigationBarThemeData(
+            indicatorColor: Colors
+                .white, // Set the background color of the selected item to white
           ),
-          NavigationDestination(
-            icon: Icon(Icons.schedule_outlined, color: Colors.white),
-            label: "",
-            selectedIcon: Icon(Icons.schedule, color: Colors.white),
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.inbox_outlined, color: Colors.white),
-            label: "",
-            selectedIcon: Icon(Icons.inbox, color: Colors.white),
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.person_outlined, color: Colors.white),
-            label: "",
-            selectedIcon: Icon(Icons.person, color: Colors.white),
-          ),
-        ],
-        onDestinationSelected: _onDestinationSelected,  // Use the method to update the selected index
-        backgroundColor: Colors.purple.shade700,
-        labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
-        selectedIndex: _selectedIndex,
+        ),
+        child: NavigationBar(
+          destinations: const [
+            NavigationDestination(
+              icon: Icon(Icons.home_outlined, color: Colors.white),
+              label: "",
+              selectedIcon: Icon(Icons.home, color: Colors.purpleAccent),
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.schedule_outlined, color: Colors.white),
+              label: "",
+              selectedIcon: Icon(Icons.schedule, color: Colors.purpleAccent),
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.inbox_outlined, color: Colors.white),
+              label: "",
+              selectedIcon: Icon(Icons.inbox, color: Colors.purpleAccent),
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.person_outlined, color: Colors.white),
+              label: "",
+              selectedIcon: Icon(Icons.person, color: Colors.purpleAccent),
+            ),
+          ],
+          onDestinationSelected:
+              _onDestinationSelected, // Use the method to update the selected index
+          backgroundColor: Colors.purple.shade700,
+          labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
+          selectedIndex: _selectedIndex,
+        ),
       ),
     );
   }
